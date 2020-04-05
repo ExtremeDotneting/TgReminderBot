@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using IRO.Common.Services;
 using Serilog;
 using Telegram.Bot;
 using TgReminderBot.Services;
@@ -33,7 +34,11 @@ namespace TgReminderBot.HostedServices
                 {
                     try
                     {
-                        await ProcessChat(chatId);
+                        var t = ProcessChat(chatId);
+                        await TaskExt.WhenAll(
+                            new Task[] { t }, 
+                            TimeSpan.FromSeconds(5)
+                            );
                     }
                     catch (Exception ex)
                     {

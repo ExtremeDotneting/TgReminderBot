@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Telegram.Bot.AspNetPipeline.Mvc.Controllers.Core;
 using Telegram.Bot.AspNetPipeline.Mvc.Routing.Metadata;
+using Telegram.Bot.Types;
 using TgReminderBot.Data;
 using TgReminderBot.Services;
 using TgReminderBot.Services.Messaging;
@@ -37,7 +38,8 @@ namespace TgReminderBot.BotControllers
             await SendTextMessageAsync($"/start_mailing - Начать присылать сообщения.\n" +
                                                      $"/stop_mailing - Отписаться от сообщений.\n" +
                                                      $"/schedule - Посмотреть/изменить расписание. Жми это если впервые здесь.\n" +
-                                                     $"/random (Игорь) - Получить напутствие от Игоряна сейчас.\n");
+                                                     $"/random (Игорь) - Получить напутствие от Игоряна сейчас.\n" +
+                                                     $"/propose_phrase - Предложить фразу.");
         }
 
         [BotRoute("/schedule")]
@@ -99,6 +101,26 @@ namespace TgReminderBot.BotControllers
             if (text == "игорьпомоги" || text == "игорянпомоги")
             {
                 await Help();
+            }
+        }
+
+        [BotRoute("/propose_phrase")]
+        public async Task ProposePhrase()
+        {
+            if (!UpdateContext.IsUserAdmin())
+                return;
+            await SendTextMessageAsync($"Введите фразу. Фраза должна начинаться с слеша '\\', иначе она не будет добавленна:\n");
+            var msg = await BotExt.ReadMessageAsync();
+            var text = msg.Text.Trim();
+            if (text.StartsWith("\\"))
+            {
+                var chatId = new ChatId(AppSettings.ProposedMessagesChannelId);
+                await Bot.ForwardMessageAsync(chatId, Chat, msg.MessageId);
+                await SendTextMessageAsync($"Отправленно админу на проверку.");
+            }
+            else
+            {
+                await SendTextMessageAsync($"Отменено.");
             }
         }
     }

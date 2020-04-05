@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using IRO.Storage;
+using IRO.Storage.WithLiteDB;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -42,7 +47,9 @@ namespace TgReminderBot
                 serv.AddSingleton<ScriptedMessagesService>();
                 serv.AddSingleton<SheduleWorker>();
                 serv.AddSingleton<BaseHostedService<SheduleWorker>>();
-                serv.AddSingleton<IKeyValueStorage>(new IRO.Storage.DefaultStorages.FileStorage("mainStorage.json"));
+                serv.AddSingleton<IKeyValueStorage>(
+                    new LiteDatabaseStorage()
+                    );
                 serv.AddSingleton<ChatScopedStorageProvider>();
                 serv.AddSingleton<PlainMessagesService>();
                 serv.AddSingleton<MessagingFacade>();
@@ -88,6 +95,9 @@ namespace TgReminderBot
             {
                 await usersSheduleWorker.StartAsync(default(CancellationToken));
             });
+
+            
+
 
             while (true)
             {

@@ -36,7 +36,7 @@ namespace TgReminderBot.BotControllers
         {
             if (!UpdateContext.IsUserAdmin())
                 return;
-            await SendTextMessageAsync($"Введите фразу. Фраза должна начинаться с слеша '\\', иначе она не будет добавлена:\n");
+            await SendTextMessageAsync($"Введите фразу. Фраза должна начинаться с слеша '\\', иначе она не будет добавленна:\n");
             var msg = await BotExt.ReadMessageAsync();
             var text = msg.Text.Trim();
             if (text.StartsWith("\\"))

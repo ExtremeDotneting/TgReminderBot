@@ -41,6 +41,15 @@ namespace TgReminderBot
             }
         }
 
+        public static long ProposedMessagesChannelId
+        {
+            get
+            {
+                var res = Config["proposedMessagesChannelId"];
+                return Convert.ToInt64(res);
+            }
+        }
+
         public static bool IsDevEnvironment
         {
             get
