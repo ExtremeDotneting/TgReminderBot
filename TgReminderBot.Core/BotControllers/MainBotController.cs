@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Telegram.Bot.AspNetPipeline.Extensions.ImprovedBot;
 using Telegram.Bot.AspNetPipeline.Mvc.Controllers.Core;
 using Telegram.Bot.AspNetPipeline.Mvc.Routing.Metadata;
 using Telegram.Bot.Types;
@@ -39,7 +40,7 @@ namespace TgReminderBot.Core.BotControllers
                                                      $"/stop_mailing - Отписаться от сообщений.\n" +
                                                      $"/schedule - Посмотреть/изменить расписание. Жми это если впервые здесь.\n" +
                                                      $"/random (Игорь) - Получить напутствие от Игоряна сейчас.\n" +
-                                                     $"/propose_phrase - Предложить фразу.");
+                                                     $"/propose_phrase (Игорь добавь) - Предложить фразу.");
         }
 
         [BotRoute("/schedule")]
@@ -94,23 +95,35 @@ namespace TgReminderBot.Core.BotControllers
         public async Task LanguageFriendly()
         {
             var text = Message.Text.Trim().Replace(" ", "").ToLower();
-            if (text == "игорь" || text == "игорян")
-            {
-                await Random();
-            }
             if (text == "игорьпомоги" || text == "игорянпомоги")
             {
                 await Help();
+                return;
             }
+            if (text == "игорьдобавь" || text == "игоряндобавь")
+            {
+                if (UpdateContext.IsUserAdmin())
+                {
+                    Features.StartAnotherAction("AddPhrase");
+                }
+                else
+                {
+                    await ProposePhrase();
+                }
+                return;
+            }
+            if (text.Contains("игорь") || text.Contains("игорян"))
+            {
+                await Random();
+            }
+           
         }
 
         [BotRoute("/propose_phrase")]
         public async Task ProposePhrase()
         {
-            if (!UpdateContext.IsUserAdmin())
-                return;
-            await SendTextMessageAsync($"Введите фразу. Фраза должна начинаться с слеша '\\', иначе она не будет добавленна:\n");
-            var msg = await BotExt.ReadMessageAsync();
+            await SendTextMessageAsync($"Введите фразу с реплаем к боту.\nФраза должна начинаться с слеша '\\', иначе она не будет добавленна:\n");
+            var msg = await BotExt.ReadMessageAsync(ReadCallbackFromType.CurrentUserReply);
             var text = msg.Text.Trim();
             if (text.StartsWith("\\"))
             {
