@@ -6,9 +6,18 @@ namespace TgReminderBot.Data
 {
     public class MailingSchedule
     {
-        public TimeSpanRange Range { get; set; } = new TimeSpanRange(TimeSpan.FromHours(11), TimeSpan.FromHours(22));
+        public TimeSpanRange Range { get; set; } = new TimeSpanRange(TimeSpan.FromHours(0), TimeSpan.FromHours(24));
 
         public TimeSpan Delay { get; set; } = TimeSpan.FromMinutes(60);
+
+        //Debug crunch.
+        //public TimeSpan Delay
+        //{
+        //    get => TimeSpan.FromSeconds(7);
+        //    set
+        //    {
+        //    }
+        //} 
 
         public int TimeZone { get; set; } = 0;
 

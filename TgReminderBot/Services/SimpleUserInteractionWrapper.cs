@@ -11,18 +11,18 @@ namespace TgReminderBot.Services
 {
     public class SimpleUserInteractionWrapper : ISimpleUserInteractionWrapper
     {
-        readonly UserService _userService;
+        readonly ChatService _chatService;
 
         public DateTime LastConversation
         {
             get
             {
-                var res = _userService.GetLastConversationTime(Username).Result;
+                var res = _chatService.GetLastConversationTime(ChatId).Result;
                 return res;
             }
             set
             {
-                _userService.SetLastConversationTime(Username, value).Wait();
+                _chatService.SetLastConversationTime(ChatId, value).Wait();
             }
         }
 
@@ -30,36 +30,36 @@ namespace TgReminderBot.Services
         {
             get
             {
-                var res = _userService.GetSchedule(Username).Result;
+                var res = _chatService.GetSchedule(ChatId).Result;
                 return res;
             }
             set
             {
-                _userService.SetSchedule(Username, value).Wait();
+                _chatService.SetSchedule(ChatId, value).Wait();
             }
         }
 
         public ITelegramBotClient Bot { get; }
+        public ChatInfo ChatInfo { get; }
         public IKeyValueStorage UserStorage { get; }
-        public string Username { get; }
 
-        public SimpleUserInteractionWrapper(ITelegramBotClient bot, string username, UserService userService, UserScopedStorageProvider userScopedStorageProvider)
+        long ChatId => ChatInfo.ChatIdentifier;
+
+        public SimpleUserInteractionWrapper(ITelegramBotClient bot, ChatInfo chatInfo, ChatService userService, ChatScopedStorageProvider userScopedStorageProvider)
         {
-            Username = username;
-            UserStorage = userScopedStorageProvider.GetUserStorage(Username);
-            _userService = userService;
+            ChatInfo = chatInfo;
+            UserStorage = userScopedStorageProvider.GetChatStorage(ChatId);
+            _chatService = userService;
             Bot = bot;
         }
         public async Task SendMessage(string msg)
         {
-            var chatId=await _userService.GetUserChatId(Username);
-            await Bot.SendTextMessageAsync(chatId, msg);
+            await Bot.SendTextMessageAsync(ChatId, msg);
         }
 
         public async Task<string> ReadMessage()
         {
-            var chatId = await _userService.GetUserChatId(Username);
-            var msg = await Bot.ReadMessageAsync(chatId);
+            var msg = await Bot.ReadMessageAsync(ChatId);
             return msg.Text;
         }
     }

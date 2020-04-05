@@ -13,7 +13,7 @@ namespace TgReminderBot.Services
         MailingSchedule Schedule { get; set; }
 
         IKeyValueStorage UserStorage { get; }
-        string Username { get; }
+        ChatInfo ChatInfo { get; }
 
         Task SendMessage(string msg);
 

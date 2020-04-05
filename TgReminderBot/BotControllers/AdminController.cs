@@ -14,11 +14,11 @@ namespace TgReminderBot.BotControllers
     public class AdminController : BotController
     {
         readonly PlainMessagesService _plainMessagesService;
-        readonly UserService _userService;
+        readonly ChatService _chatService;
 
-        public AdminController(UserService userService, PlainMessagesService plainMessagesService)
+        public AdminController(ChatService userService, PlainMessagesService plainMessagesService)
         {
-            _userService = userService;
+            _chatService = userService;
             _plainMessagesService = plainMessagesService;
         }
 

@@ -12,16 +12,16 @@ namespace TgReminderBot.Services.Messaging
     public class MessagingFacade
     {
         readonly Random _rd = new Random();
-        readonly UserScopedStorageProvider _scopedStorageProvider;
+        readonly ChatScopedStorageProvider _scopedStorageProvider;
         readonly PlainMessagesService _plainMessagesService;
-        readonly UserService _userService;
+        readonly ChatService _chatService;
         readonly ScriptedMessagesService _scriptedMessagesService;
 
-        public MessagingFacade(UserScopedStorageProvider scopedStorageProvider, PlainMessagesService plainMessagesService, UserService userService)
+        public MessagingFacade(ChatScopedStorageProvider scopedStorageProvider, PlainMessagesService plainMessagesService, ChatService userService)
         {
             _scopedStorageProvider = scopedStorageProvider;
             _plainMessagesService = plainMessagesService;
-            _userService = userService;
+            _chatService = userService;
             //Crunch here.
             _scriptedMessagesService = new ScriptedMessagesService(ConversationScripts.Scripts);
         }
@@ -32,14 +32,15 @@ namespace TgReminderBot.Services.Messaging
             if (_plainMessagesService.Count > rdNum)
             {
                 var text = _plainMessagesService.GetRandomPhrase();
-                await bot.SendTextMessageAsync(chatInfo.ChatIdentifier, text);
+                var lastMsgInfo=await _chatService.GetLastMessageInfo(chatInfo.ChatIdentifier);
+                await bot.SendTextMessageAsync(chatInfo.ChatIdentifier, text, replyToMessageId: lastMsgInfo.MessageId);
             }
             else
             {
-                var user = new SimpleUserInteractionWrapper(bot, username, _userService, _scopedStorageProvider);
+                var user = new SimpleUserInteractionWrapper(bot, chatInfo, _chatService, _scopedStorageProvider);
                 await _scriptedMessagesService.MakeRandomСonversation(user);
             }
-            await _userService.SetLastConversationTime(username, DateTime.UtcNow);
+            await _chatService.SetLastConversationTime(chatInfo.ChatIdentifier, DateTime.UtcNow);
         }
     }
 }

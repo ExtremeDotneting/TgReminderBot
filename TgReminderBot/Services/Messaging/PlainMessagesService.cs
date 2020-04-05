@@ -52,7 +52,7 @@ namespace TgReminderBot.Services.Messaging
                     .Replace("\\t", "    ");
                 if (string.IsNullOrWhiteSpace(escapedStr))
                     continue;
-                _phrases.Add(str);
+                _phrases.Add(escapedStr);
             }
         }
     }

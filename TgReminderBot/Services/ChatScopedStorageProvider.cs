@@ -7,9 +7,9 @@ using IRO.Storage.DefaultStorages;
 
 namespace TgReminderBot.Services
 {
-    public class UserScopedStorageProvider
+    public class ChatScopedStorageProvider
     {
-        public UserScopedStorageProvider()
+        public ChatScopedStorageProvider()
         {
             var dirPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"user_storages");
             if (!Directory.Exists(dirPath))
@@ -18,11 +18,11 @@ namespace TgReminderBot.Services
             }
         }
 
-        public IKeyValueStorage GetUserStorage(string username)
+        public IKeyValueStorage GetChatStorage(long chatId)
         {
             var dirPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"user_storages");
             //var path = Path.Combine(dirPath, $"storageForUser_{username}.json");
-            return new FileStorage($"storageForUser_{username}.json", dirPath);
+            return new FileStorage($"storageForUser_{chatId}.json", dirPath);
         }
     }
 }

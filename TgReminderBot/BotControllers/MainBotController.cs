@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using Telegram.Bot.AspNetPipeline.Extensions;
+﻿using System.Threading.Tasks;
 using Telegram.Bot.AspNetPipeline.Mvc.Controllers.Core;
 using Telegram.Bot.AspNetPipeline.Mvc.Routing.Metadata;
 using TgReminderBot.Data;
@@ -14,25 +10,26 @@ namespace TgReminderBot.BotControllers
     public class MainBotController : BotController
     {
         readonly MessagingFacade _messagingFacade;
-        readonly UserService _userService;
+        readonly ChatService _chatService;
 
-        public MainBotController(MessagingFacade messagingFacade, UserService userService)
+        public MainBotController(MessagingFacade messagingFacade, ChatService userService)
         {
             _messagingFacade = messagingFacade;
-            _userService = userService;
+            _chatService = userService;
         }
 
         [BotRoute("/start")]
         public async Task Start()
         {
-            await SendTextMessageAsync($"Привет, меня зовут Игорян. Я психоделический бот-напоминалка. " +
+            await SendTextMessageAsync($"Привет, меня зовут Игорян. Я психоделический бот-напоминалка." +
                                                      $"Моя цель, заложенная моим больным создателем, - напоминать что ты все еще жив.\n\n" +
                                                      $"Если ты тоже ощущаешь что время идет слишком быстро, что ты стал слишком ленивым и тебе не хватает мотивации " +
                                                      $"или просто хочешь попрактиковаться в осознанных сноведениях, то добро пожаловать.\n\n" +
-                                                     $"Составь расписание и получай сообщения. Жмакни /help");
-            await _userService.SetIsMailing(Message.From.Username, true);
+                                                     $"Составь расписание и получай сообщения." +
+                                                     $"\n\nЖмакни /help . Или напиши 'Игорь помоги'.");
+            await _chatService.SetIsMailing(this.GetChatInfo().ChatIdentifier, true);
         }
-   
+
 
         [BotRoute("/help")]
         public async Task Help()
@@ -40,25 +37,28 @@ namespace TgReminderBot.BotControllers
             await SendTextMessageAsync($"/start_mailing - Начать присылать сообщения.\n" +
                                                      $"/stop_mailing - Отписаться от сообщений.\n" +
                                                      $"/schedule - Посмотреть/изменить расписание. Жми это если впервые здесь.\n" +
-                                                     $"/random - Получить напутствие от Игоряна сейчас.\n");
+                                                     $"/random (Игорь) - Получить напутствие от Игоряна сейчас.\n");
         }
 
         [BotRoute("/schedule")]
         public async Task Schedule()
         {
-            var schedule = await _userService.GetSchedule(Message.From.Username);
+            var schedule = await _chatService.GetSchedule(this.GetChatInfo().ChatIdentifier);
             await SendTextMessageAsync(
                 $"Текущее расписание '{schedule.ToHoursString()}'." +
                 "\n\nЧтоб изменить расписание - отправьте сообщение формата" +
                 "\n/schedule StartHour-{EndHour, +TimeZone, DelayMinutes");
 
-            if (Message.Text.Trim() != "/schedule")
+            var scheduleStr = Message.Text.Trim();
+            if (scheduleStr != "/schedule")
             {
-                var scheduleStr = Message.Text.Replace("/schedule", "").Trim();
+                var index = scheduleStr.IndexOf(" ") + 1;
+                scheduleStr = scheduleStr.Substring(index);
+
                 try
                 {
                     schedule = MailingSchedule.FromHoursString(scheduleStr);
-                    await _userService.SetSchedule(Message.From.Username, schedule);
+                    await _chatService.SetSchedule(this.GetChatInfo().ChatIdentifier, schedule);
                     await SendTextMessageAsync($"Новое расписание '{schedule.ToHoursString()}'.");
                 }
                 catch
@@ -71,21 +71,35 @@ namespace TgReminderBot.BotControllers
         [BotRoute("/start_mailing")]
         public async Task StartMailing()
         {
-            await _userService.SetIsMailing(Message.From.Username, true);
+            await _chatService.SetIsMailing(this.GetChatInfo().ChatIdentifier, true);
             await SendTextMessageAsync($"Буду радовать тебя сообщениями))");
         }
 
         [BotRoute("/stop_mailing")]
         public async Task StopMailing()
         {
-            await _userService.SetIsMailing(Message.From.Username, false);
+            await _chatService.SetIsMailing(this.GetChatInfo().ChatIdentifier, false);
             await SendTextMessageAsync($"Сообщения преостановленны.");
         }
 
         [BotRoute("/random")]
         public async Task Random()
         {
-            await _messagingFacade.SendRandomMessage(Bot, Message.From.Username);
+            await _messagingFacade.SendRandomMessage(Bot, this.GetChatInfo());
+        }
+
+        [BotRoute(Order = 1)]
+        public async Task LanguageFriendly()
+        {
+            var text = Message.Text.Trim().Replace(" ", "").ToLower();
+            if (text == "игорь" || text == "игорян")
+            {
+                await Random();
+            }
+            if (text == "игорьпомоги" || text == "игорянпомоги")
+            {
+                await Help();
+            }
         }
     }
 }

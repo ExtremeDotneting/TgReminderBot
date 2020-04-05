@@ -11,6 +11,8 @@ using Telegram.Bot.AspNetPipeline.Core;
 using Telegram.Bot.AspNetPipeline.Extensions;
 using Telegram.Bot.AspNetPipeline.Mvc.Builder;
 using Telegram.Bot.AspNetPipeline.Mvc.Extensions;
+using Telegram.Bot.Types.Enums;
+using TgReminderBot.Data;
 using TgReminderBot.HostedServices;
 using TgReminderBot.Services;
 using TgReminderBot.Services.Messaging;
@@ -21,7 +23,7 @@ namespace TgReminderBot
     {
         static void Main(string[] args)
         {
-            var bot = new TelegramBotClient(AppSettings.BotToken);
+            var bot = new TelegramBotClient(AppSettings.BotToken, new QueuedHttpClient(TimeSpan.FromMilliseconds(100)));
             var botManager = new BotManager(bot);
             botManager.ConfigureServices((servicesWrap) =>
             {
@@ -35,15 +37,16 @@ namespace TgReminderBot
                 {
                     conf.AddSerilog(Log.Logger);
                 });
+                serv.AddSingleton<ITelegramBotClient>(bot);
                 serv.AddSingleton<PlainMessagesService>();
                 serv.AddSingleton<ScriptedMessagesService>();
-                serv.AddSingleton<UsersSheduleWorker>();
-                serv.AddSingleton<BaseHostedService<UsersSheduleWorker>>();
+                serv.AddSingleton<SheduleWorker>();
+                serv.AddSingleton<BaseHostedService<SheduleWorker>>();
                 serv.AddSingleton<IKeyValueStorage>(new IRO.Storage.DefaultStorages.FileStorage("mainStorage.json"));
-                serv.AddSingleton<UserScopedStorageProvider>();
+                serv.AddSingleton<ChatScopedStorageProvider>();
                 serv.AddSingleton<PlainMessagesService>();
                 serv.AddSingleton<MessagingFacade>();
-                serv.AddSingleton<UserService>();
+                serv.AddSingleton<ChatService>();
 
                 servicesWrap.AddMvc(new MvcOptions()
                 {
@@ -54,8 +57,16 @@ namespace TgReminderBot
             {
                 builder.Use(async (ctx, next) =>
                 {
-                    var userService=ctx.Services.GetRequiredService<UserService>();
-                    await userService.SetUserChatId(ctx.Message.From.Username, ctx.Message.From.Id);
+                    if (ctx.Update.Type == UpdateType.Message)
+                    {
+                        var userService = ctx.Services.GetRequiredService<ChatService>();
+                        await userService.SetLastMessageInfo(ctx.Chat.Id, new MessageShortInfo()
+                        {
+                            ChatIdentifier = ctx.Chat.Id,
+                            FromUsername = ctx.Message.From.Username,
+                            MessageId = ctx.Message.MessageId
+                        });
+                    }
                     await next();
                 });
 
@@ -65,13 +76,14 @@ namespace TgReminderBot
                 builder.UseMvc(mvcBuilder =>
                 {
                     //Write /debug to see info about routing.
-                    mvcBuilder.UseDebugInfo();
+                    if (AppSettings.IsDevEnvironment)
+                        mvcBuilder.UseDebugInfo();
                 });
             });
 
             //Start
             botManager.Start();
-            var usersSheduleWorker = botManager.Services.GetRequiredService<UsersSheduleWorker>();
+            var usersSheduleWorker = botManager.Services.GetRequiredService<SheduleWorker>();
             Task.Run(async () =>
             {
                 await usersSheduleWorker.StartAsync(default(CancellationToken));
