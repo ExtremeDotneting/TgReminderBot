@@ -32,9 +32,7 @@ namespace TgReminderBot.Core.Services.Messaging
             if (pmServ.Count > rdNum)
             {
                 var text = pmServ.GetRandomPhrase();
-                await bot.SendTextMessageAsync(chatInfo.ChatIdentifier, text);
-                //var lastMsgInfo = await _chatService.GetLastMessageInfo(chatInfo.ChatIdentifier);
-                //await bot.SendTextMessageAsync(chatInfo.ChatIdentifier, text, replyToMessageId: lastMsgInfo.MessageId);
+                await pmServ.SendRandomPhrase(bot, chatInfo);
             }
             else
             {

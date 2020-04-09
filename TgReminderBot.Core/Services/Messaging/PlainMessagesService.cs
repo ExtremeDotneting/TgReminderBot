@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Telegram.Bot;
+using Telegram.Bot.Types.InputFiles;
+using TgReminderBot.Core.Data;
 
 namespace TgReminderBot.Core.Services.Messaging
 {
@@ -31,6 +34,23 @@ namespace TgReminderBot.Core.Services.Messaging
             return _phrases[index];
         }
 
+
+        public async Task SendRandomPhrase(ITelegramBotClient bot, ChatInfo chatInfo)
+        {
+            var text = GetRandomPhrase();
+            if (IsImageUrl(text))
+            {
+                await bot.SendPhotoAsync(chatInfo.ChatIdentifier, new InputOnlineFile(text));
+            }
+            else
+            {
+                await bot.SendTextMessageAsync(chatInfo.ChatIdentifier, text);
+            }
+
+            //var lastMsgInfo = await _chatService.GetLastMessageInfo(chatInfo.ChatIdentifier);
+            //await bot.SendTextMessageAsync(chatInfo.ChatIdentifier, text, replyToMessageId: lastMsgInfo.MessageId);
+        }
+
         public async Task AddPhrase(string str)
         {
             var unescapedStr = str
@@ -39,6 +59,16 @@ namespace TgReminderBot.Core.Services.Messaging
             unescapedStr = "\n" + unescapedStr;
             await File.AppendAllTextAsync(BotPhrasesFilePath, unescapedStr);
             ReloadFile().Wait();
+        }
+
+        bool IsImageUrl(string str)
+        {
+            str = str.Trim().ToLower();
+            if (str.StartsWith("http") && (str.EndsWith(".jpg") || str.EndsWith(".jpeg") || str.EndsWith(".png")))
+            {
+                return true;
+            }
+            return true;
         }
 
         async Task ReloadFile()
