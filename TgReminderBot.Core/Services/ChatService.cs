@@ -15,6 +15,17 @@ namespace TgReminderBot.Core.Services
             _storage = storage;
         }
 
+        public async Task SetChatScope(long chatId, string chatPhrasesScope)
+        {
+            await _storage.Set($"chat_scope__{chatId}", chatPhrasesScope);
+        }
+
+        public async Task<string> GetChatScope(long chatId)
+        {
+            var res = await _storage.GetOrDefault<string>($"chat_scope__{chatId}");
+            return res ?? "default";
+        }
+
         public async Task SetLastConversationTime(long chatId, DateTime lastConversationTime)
         {
             await _storage.Set($"user_last_conversation_time__{chatId}", lastConversationTime);
@@ -69,6 +80,11 @@ namespace TgReminderBot.Core.Services
                 }
             }
             await _storage.Set("users_mailing_enabled", collection);
+        }
+
+        public async Task StopAllMailing()
+        {
+            await _storage.Set("users_mailing_enabled", new List<long>());
         }
 
         public async Task<bool> IsMailing(long chatId)

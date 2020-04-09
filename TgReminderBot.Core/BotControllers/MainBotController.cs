@@ -53,7 +53,7 @@ namespace TgReminderBot.Core.BotControllers
                 "\n/schedule StartHour-{EndHour, +TimeZone, DelayMinutes");
 
             var scheduleStr = Message.Text.Trim();
-            if (scheduleStr != "/schedule")
+            if (scheduleStr.Contains("-"))
             {
                 var index = scheduleStr.IndexOf(" ") + 1;
                 scheduleStr = scheduleStr.Substring(index);
@@ -85,6 +85,13 @@ namespace TgReminderBot.Core.BotControllers
             await SendTextMessageAsync($"Сообщения преостановленны.");
         }
 
+        [BotRoute("/stop")]
+        public async Task Stop()
+        {
+            await StopMailing();
+        }
+
+
         [BotRoute("/random")]
         public async Task Random()
         {
@@ -95,6 +102,11 @@ namespace TgReminderBot.Core.BotControllers
         public async Task LanguageFriendly()
         {
             var text = Message.Text.Trim().Replace(" ", "").ToLower();
+            if ((text == "игорьпомогиадмину" || text == "игорянпомогиадмину") && UpdateContext.HasAdminRights())
+            {
+                Features.StartAnotherAction("AdminHelp");
+                return;
+            }
             if (text == "игорьпомоги" || text == "игорянпомоги")
             {
                 await Help();
@@ -102,7 +114,7 @@ namespace TgReminderBot.Core.BotControllers
             }
             if (text == "игорьдобавь" || text == "игоряндобавь")
             {
-                if (UpdateContext.IsUserAdmin())
+                if (UpdateContext.HasAdminRights())
                 {
                     Features.StartAnotherAction("AddPhrase");
                 }
@@ -116,7 +128,7 @@ namespace TgReminderBot.Core.BotControllers
             {
                 await Random();
             }
-           
+
         }
 
         [BotRoute("/propose_phrase")]

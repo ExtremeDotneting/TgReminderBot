@@ -85,7 +85,6 @@ namespace TgReminderBot.Wpf
                     conf.AddSerilog(Log.Logger);
                 });
                 serv.AddSingleton<ITelegramBotClient>(bot);
-                serv.AddSingleton<PlainMessagesService>();
                 serv.AddSingleton<ScriptedMessagesService>();
                 serv.AddSingleton<ScheduleWorker>();
                 serv.AddSingleton<BaseHostedService<ScheduleWorker>>();

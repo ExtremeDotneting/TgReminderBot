@@ -7,16 +7,21 @@ namespace TgReminderBot.Core.Services.Messaging
 {
     public class PlainMessagesService
     {
-        readonly string BotPhrasesFilePath ;
+        readonly string BotPhrasesFilePath;
 
         readonly Random _rd = new Random();
         List<string> _phrases;
 
         public int Count => _phrases.Count;
 
-        public PlainMessagesService()
+        public PlainMessagesService(string scopeName = null)
         {
-            BotPhrasesFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\BotPhrases.txt");
+            scopeName ??= "default";
+            BotPhrasesFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"..\\..\\..\\BotPhrases\\{scopeName}.txt");
+            if (!File.Exists(BotPhrasesFilePath))
+            {
+                File.WriteAllText(BotPhrasesFilePath, "");
+            }
             ReloadFile().Wait();
         }
 
@@ -26,13 +31,14 @@ namespace TgReminderBot.Core.Services.Messaging
             return _phrases[index];
         }
 
-        public async Task AddGlobalPhrase(string str)
+        public async Task AddPhrase(string str)
         {
             var unescapedStr = str
                 .Replace("\n", "\\n")
                 .Replace("\r", "\\r");
             unescapedStr = "\n" + unescapedStr;
             await File.AppendAllTextAsync(BotPhrasesFilePath, unescapedStr);
+            ReloadFile().Wait();
         }
 
         async Task ReloadFile()

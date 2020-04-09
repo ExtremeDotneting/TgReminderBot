@@ -6,10 +6,13 @@ namespace TgReminderBot.Core.Services
 {
     public static class CommonExtension
     {
-        public static bool IsUserAdmin(this UpdateContext uc)
+        public static bool HasAdminRights(this UpdateContext uc)
         {
             var admins = AppSettings.AdminsUsernames;
-            return admins.Contains(uc.Message.From.Username);
+            var isAdmin= admins.Contains(uc.Message.From.Username) ||
+                         admins.Contains(uc.Message.Chat.Id.ToString()) || 
+                         admins.Contains(uc.Message.Chat.Username ?? "---");
+            return isAdmin;
         }
 
         public static ChatInfo GetChatInfo(this BotController @this)

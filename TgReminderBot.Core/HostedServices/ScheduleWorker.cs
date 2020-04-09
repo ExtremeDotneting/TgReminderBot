@@ -26,7 +26,7 @@ namespace TgReminderBot.Core.HostedServices
         {
             while (true)
             {
-                await Task.Delay(3000, cancellationToken);
+                await Task.Delay(30000, cancellationToken);
                 var chats = await _chatService.GetChatsWithEnabledMailing();
                 foreach (var chatId in chats)
                 {

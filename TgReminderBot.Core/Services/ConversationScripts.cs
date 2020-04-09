@@ -10,16 +10,16 @@ namespace TgReminderBot.Core.Services
         {
             async (userInteraction) =>
             {
-                await userInteraction.SendMessage("Напиши фразу 'мат еч а' наоборот.");
-                var msg = await userInteraction.ReadMessage(); 
-                if(msg.Trim() == "а че там")
-                {
-                    await userInteraction.SendMessage("Так а че там? Расскажи мне, я твой друг. Честно...");
-                }
-                else
-                {
-                    await userInteraction.SendMessage("Неправильно! Я самоуничтошаюсь.");
-                }
+                //await userInteraction.SendMessage("Напиши фразу 'мат еч а' наоборот.");
+                //var msg = await userInteraction.ReadMessage(); 
+                //if(msg.Trim() == "а че там")
+                //{
+                //    await userInteraction.SendMessage("Так а че там? Расскажи мне, я твой друг. Честно...");
+                //}
+                //else
+                //{
+                //    await userInteraction.SendMessage("Неправильно! Я самоуничтошаюсь.");
+                //}
             }
 
         };
